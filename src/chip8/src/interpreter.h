@@ -39,5 +39,13 @@ uint8_t nibble(struct c8_instruction i);
 uint16_t addr(struct c8_instruction i);
 uint8_t x(struct c8_instruction i);
 uint8_t y(struct c8_instruction i);
+uint8_t opcode(struct c8_instruction i);
+
+void dispatch(struct c8_interpreter *interp, struct c8_instruction i);
+
+void cls(struct c8_interpreter *interp);
+void ret(struct c8_interpreter *interp);
+void jump(struct c8_interpreter *interp, uint16_t addr);
+void call(struct c8_interpreter *interp, uint16_t addr);
 
 #endif
