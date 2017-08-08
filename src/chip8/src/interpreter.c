@@ -53,6 +53,26 @@ void dispatch(struct c8_interpreter *interp, struct c8_instruction i)
     call(interp, addr(i));
     return;
   }
+
+  if(opcode(i) == 0x3) {
+    se_direct(interp, x(i), byte(i));
+    return;
+  }
+
+  if(opcode(i) == 0x4) {
+    sne_direct(interp, x(i), byte(i));
+    return;
+  }
+
+  if(opcode(i) == 0x5 && nibble(i) == 0) {
+    se_indirect(interp, x(i), y(i));
+    return;
+  }
+
+  if(opcode(i) == 0x6) {
+    load(interp, x(i), byte(i));
+    return;
+  }
 }
 
 void cls(struct c8_interpreter *interp)
@@ -77,4 +97,30 @@ void call(struct c8_interpreter *interp, uint16_t addr)
 {
   interp->cpu.sp++;
   interp->cpu.stack[interp->cpu.sp] = addr;
+}
+
+void se_direct(struct c8_interpreter *interp, uint8_t reg, uint8_t byte)
+{
+  if(interp->cpu.registers[reg] == byte) {
+    interp->cpu.pc += 2;
+  }
+}
+
+void sne_direct(struct c8_interpreter *interp, uint8_t reg, uint8_t byte)
+{
+  if(interp->cpu.registers[reg] != byte) {
+    interp->cpu.pc += 2;
+  }
+}
+
+void se_indirect(struct c8_interpreter *interp, uint8_t r1, uint8_t r2)
+{
+  if(interp->cpu.registers[r1] == interp->cpu.registers[r2]) {
+    interp->cpu.pc += 2;
+  }
+}
+
+void load(struct c8_interpreter *interp, uint8_t reg, uint8_t byte)
+{
+  interp->cpu.registers[reg] = byte;
 }
