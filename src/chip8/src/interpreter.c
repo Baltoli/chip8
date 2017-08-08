@@ -1,6 +1,7 @@
 #include "interpreter.h"
 
 #include <stddef.h>
+#include <stdio.h>
 
 inline uint8_t byte(struct c8_instruction i)
 {
@@ -123,4 +124,19 @@ void se_indirect(struct c8_interpreter *interp, uint8_t r1, uint8_t r2)
 void load(struct c8_interpreter *interp, uint8_t reg, uint8_t byte)
 {
   interp->cpu.registers[reg] = byte;
+}
+
+void dump_state(struct c8_interpreter *interp)
+{
+  printf("Interpreter state:\n");
+  printf("\tRunning: %s\n", interp->running ? "yes" : "no");
+  printf("\tRegisters:\n");
+  for(int i = 0; i < 16; ++i) {
+    if(i % 4 == 0) { printf("\t\t"); }
+    printf("V%1X: 0x%02X\t", i, interp->cpu.registers[i]);
+    if(i % 4 == 3) { printf("\n"); }
+  }
+  printf("\t\tVI: 0x%04X\n", interp->cpu.vi);
+  printf("\t\tPC: 0x%04X\n", interp->cpu.pc);
+  printf("\t\tSP: %d\n", interp->cpu.sp);
 }

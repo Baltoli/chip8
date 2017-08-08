@@ -4,11 +4,11 @@
 
 int main(int argc, char **argv)
 { 
-  struct c8_instruction i = { .op = 0x1234 };
-  printf("0x%02x\n", byte(i));
-  printf("0x%01x\n", nibble(i));
-  printf("0x%01x\n", x(i));
-  printf("0x%01x\n", y(i));
-  printf("0x%03x\n", addr(i));
+  struct c8_interpreter in = { 0 };
+  in.cpu.pc = 0x600;
+  dump_state(&in);
+  struct c8_instruction o = { .op = 0x6045 };
+  dispatch(&in, o);
+  dump_state(&in);
   return 0;
 }

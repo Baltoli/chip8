@@ -52,4 +52,6 @@ void sne_direct(struct c8_interpreter *interp, uint8_t reg, uint8_t byte);
 void se_indirect(struct c8_interpreter *interp, uint8_t r1, uint8_t r2);
 void load(struct c8_interpreter *interp, uint8_t reg, uint8_t byte);
 
+void dump_state(struct c8_interpreter *interp);
+
 #endif
