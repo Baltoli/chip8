@@ -2,6 +2,8 @@
 
 #include <stddef.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <strings.h>
 
 inline uint8_t byte(struct c8_instruction i)
 {
@@ -33,6 +35,16 @@ inline uint8_t opcode(struct c8_instruction i)
   return (i.op & 0xF000) >> 12;
 }
 
+struct c8_interpreter *new_interpreter()
+{
+  struct c8_interpreter *i = malloc(sizeof(*i));
+  bzero(i, sizeof(*i));
+
+  i->cpu.pc = 0x200;
+
+  return i;
+}
+
 void dispatch(struct c8_interpreter *interp, struct c8_instruction i)
 {
   if(opcode(i) == 0x0) {
@@ -40,39 +52,50 @@ void dispatch(struct c8_interpreter *interp, struct c8_instruction i)
       cls(interp);
     } else if(y(i) == 0xE && nibble(i) == 0xE) {
       ret(interp);
+    } else {
+      goto fail;
     }
-
-    return;
   }
 
-  if(opcode(i) == 0x1) {
+  else if(opcode(i) == 0x1) {
     jump(interp, addr(i));
-    return;
   }
 
-  if(opcode(i) == 0x2) {
+  else if(opcode(i) == 0x2) {
     call(interp, addr(i));
-    return;
   }
 
-  if(opcode(i) == 0x3) {
+  else if(opcode(i) == 0x3) {
     se_direct(interp, x(i), byte(i));
-    return;
   }
 
-  if(opcode(i) == 0x4) {
+  else if(opcode(i) == 0x4) {
     sne_direct(interp, x(i), byte(i));
-    return;
   }
 
-  if(opcode(i) == 0x5 && nibble(i) == 0) {
+  else if(opcode(i) == 0x5 && nibble(i) == 0) {
     se_indirect(interp, x(i), y(i));
-    return;
   }
 
-  if(opcode(i) == 0x6) {
+  else if(opcode(i) == 0x6) {
     load(interp, x(i), byte(i));
-    return;
+  }
+
+  else {
+fail:
+    printf("Unhandled instruction at 0x%04X: 0x%04X\n", interp->cpu.pc, i.op);
+    interp->running = false;
+  }
+}
+
+void run(struct c8_interpreter *interp)
+{
+  interp->running = true;
+
+  while(interp->running) {
+    struct c8_instruction i = { .op = interp->cpu.memory[interp->cpu.pc] };
+    dispatch(interp, i);
+    interp->cpu.pc++;
   }
 }
 
@@ -85,39 +108,52 @@ void cls(struct c8_interpreter *interp)
 
 void ret(struct c8_interpreter *interp)
 {
+  if(interp->cpu.sp == 0x0) {
+    printf("Stack underflow at 0x%04X\n", interp->cpu.pc);
+    interp->running = false;
+    return;
+  }
+
   interp->cpu.pc = interp->cpu.stack[interp->cpu.sp];
   interp->cpu.sp--;
 }
 
 void jump(struct c8_interpreter *interp, uint16_t addr)
 {
-  interp->cpu.pc = addr;
+  interp->cpu.pc = addr - 1;
 }
 
 void call(struct c8_interpreter *interp, uint16_t addr)
 {
+  if(interp->cpu.sp == 0xF) {
+    printf("Stack overflow at 0x%04X\n", interp->cpu.pc);
+    interp->running = false;
+    return;
+  }
+
   interp->cpu.sp++;
-  interp->cpu.stack[interp->cpu.sp] = addr;
+  interp->cpu.stack[interp->cpu.sp] = interp->cpu.pc;
+  interp->cpu.pc = addr - 1;
 }
 
 void se_direct(struct c8_interpreter *interp, uint8_t reg, uint8_t byte)
 {
   if(interp->cpu.registers[reg] == byte) {
-    interp->cpu.pc += 2;
+    interp->cpu.pc += 1;
   }
 }
 
 void sne_direct(struct c8_interpreter *interp, uint8_t reg, uint8_t byte)
 {
   if(interp->cpu.registers[reg] != byte) {
-    interp->cpu.pc += 2;
+    interp->cpu.pc += 1;
   }
 }
 
 void se_indirect(struct c8_interpreter *interp, uint8_t r1, uint8_t r2)
 {
   if(interp->cpu.registers[r1] == interp->cpu.registers[r2]) {
-    interp->cpu.pc += 2;
+    interp->cpu.pc += 1;
   }
 }
 

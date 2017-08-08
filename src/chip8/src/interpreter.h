@@ -5,7 +5,7 @@
 #include <stdint.h>
 
 struct c8_cpu {
-  uint8_t memory[4096];
+  uint16_t memory[4096];
   uint8_t registers[16];
   uint16_t vi;
   uint8_t delay;
@@ -34,6 +34,8 @@ struct c8_instruction {
   uint16_t op;
 };
 
+struct c8_interpreter *new_interpreter();
+
 uint8_t byte(struct c8_instruction i);
 uint8_t nibble(struct c8_instruction i);
 uint16_t addr(struct c8_instruction i);
@@ -42,6 +44,7 @@ uint8_t y(struct c8_instruction i);
 uint8_t opcode(struct c8_instruction i);
 
 void dispatch(struct c8_interpreter *interp, struct c8_instruction i);
+void run(struct c8_interpreter *interp);
 
 void cls(struct c8_interpreter *interp);
 void ret(struct c8_interpreter *interp);
