@@ -81,6 +81,14 @@ void dispatch(struct c8_interpreter *interp, struct c8_instruction i)
     load(interp, x(i), byte(i));
   }
 
+  else if(opcode(i) == 0x7) {
+    add(interp, x(i), byte(i));
+  }
+
+  else if(opcode(i) == 0x8) {
+    alu(interp, x(i), y(i), nibble(i));
+  }
+
   else {
 fail:
     printf("Unhandled instruction at 0x%04X: 0x%04X\n", interp->cpu.pc, i.op);
@@ -160,6 +168,55 @@ void se_indirect(struct c8_interpreter *interp, uint8_t r1, uint8_t r2)
 void load(struct c8_interpreter *interp, uint8_t reg, uint8_t byte)
 {
   interp->cpu.registers[reg] = byte;
+}
+
+void add(struct c8_interpreter *interp, uint8_t reg, uint8_t byte)
+{
+  interp->cpu.registers[reg] += byte;
+}
+
+void alu(struct c8_interpreter *interp, uint8_t rx, uint8_t ry, uint8_t f)
+{
+  switch(f) {
+    case 0x0:
+      interp->cpu.registers[rx] = interp->cpu.registers[ry];
+      break;
+    case 0x1:
+      interp->cpu.registers[rx] |= interp->cpu.registers[ry];
+      break;
+    case 0x2:
+      interp->cpu.registers[rx] &= interp->cpu.registers[ry];
+      break;
+    case 0x3:
+      interp->cpu.registers[rx] ^= interp->cpu.registers[ry];
+      break;
+    case 0x4: {
+      uint16_t x = interp->cpu.registers[rx];
+      uint16_t y = interp->cpu.registers[ry];
+      interp->cpu.registers[0xF] = (x + y > 255) ? 1 : 0;
+      interp->cpu.registers[rx] = (uint8_t)((x + y) & 0xFF);
+      break;
+              }
+    case 0x5: {
+      uint8_t x = interp->cpu.registers[rx];
+      uint8_t y = interp->cpu.registers[ry];
+      interp->cpu.registers[0xF] = (x > y) ? 1 : 0;
+      interp->cpu.registers[rx] = (uint8_t)(x - y);
+      break;
+              }
+    case 0x6: {
+      uint8_t x = interp->cpu.registers[rx];
+      interp->cpu.registers[0xF] = (x % 2 == 1) ? 1 : 0;
+      interp->cpu.registers[rx] >>= 1;
+      break;
+              }
+    case 0x7:
+      break;
+    case 0xE:
+      break;
+    default:
+      break;
+  }
 }
 
 void dump_state(struct c8_interpreter *interp)
