@@ -52,6 +52,7 @@ void jump(struct c8_interpreter *interp, uint16_t addr);
 void call(struct c8_interpreter *interp, uint16_t addr);
 void se_direct(struct c8_interpreter *interp, uint8_t reg, uint8_t byte);
 void sne_direct(struct c8_interpreter *interp, uint8_t reg, uint8_t byte);
+void sne_indirect(struct c8_interpreter *interp, uint8_t r1, uint8_t r2);
 void se_indirect(struct c8_interpreter *interp, uint8_t r1, uint8_t r2);
 void load(struct c8_interpreter *interp, uint8_t reg, uint8_t byte);
 void add(struct c8_interpreter *interp, uint8_t reg, uint8_t byte);

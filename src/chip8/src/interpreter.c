@@ -89,6 +89,10 @@ void dispatch(struct c8_interpreter *interp, struct c8_instruction i)
     alu(interp, x(i), y(i), nibble(i));
   }
 
+  else if(opcode(i) == 0x9 && nibble(i) == 0) {
+    sne_indirect(interp, x(i), y(i));
+  }
+
   else {
 fail:
     printf("Unhandled instruction at 0x%04X: 0x%04X\n", interp->cpu.pc, i.op);
@@ -158,6 +162,13 @@ void sne_direct(struct c8_interpreter *interp, uint8_t reg, uint8_t byte)
   }
 }
 
+void sne_indirect(struct c8_interpreter *interp, uint8_t r1, uint8_t r2)
+{
+  if(interp->cpu.registers[r1] != interp->cpu.registers[r2]) {
+    interp->cpu.pc += 1;
+  }
+}
+
 void se_indirect(struct c8_interpreter *interp, uint8_t r1, uint8_t r2)
 {
   if(interp->cpu.registers[r1] == interp->cpu.registers[r2]) {
@@ -210,11 +221,22 @@ void alu(struct c8_interpreter *interp, uint8_t rx, uint8_t ry, uint8_t f)
       interp->cpu.registers[rx] >>= 1;
       break;
               }
-    case 0x7:
+    case 0x7: {
+      uint8_t x = interp->cpu.registers[rx];
+      uint8_t y = interp->cpu.registers[ry];
+      interp->cpu.registers[0xF] = (y > x) ? 1 : 0;
+      interp->cpu.registers[rx] = (uint8_t)(y - x);
       break;
-    case 0xE:
+              }
+    case 0xE: {
+      uint8_t x = interp->cpu.registers[rx];
+      interp->cpu.registers[0xF] = (x & 0x80) ? 1 : 0;
+      interp->cpu.registers[rx] <<= 1;
       break;
+              }
     default:
+      printf("Unrecognised ALU operation: 0x%1X\n", f);
+      interp->running = false;
       break;
   }
 }
