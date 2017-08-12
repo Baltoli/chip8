@@ -40,13 +40,17 @@ int main(int argc, char **argv)
   }
 
   struct c8_interpreter *in = new_interpreter();
+
+  in->cpu.memory[0x200] = 0x60;
+  in->cpu.memory[0x201] = 0xFF;
+
   run(in);
   dump_state(in);
 
-  while (!glfwWindowShouldClose(wind)) {
+  /*while (!glfwWindowShouldClose(wind)) {
     glfwSwapBuffers(wind);
     glfwPollEvents();
-  }
+  }*/
 
   glfwDestroyWindow(wind);
   glfwTerminate();
