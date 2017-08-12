@@ -5,8 +5,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define SCREEN_WIDTH 640
-#define SCREEN_HEIGHT 480
+#define SCREEN_WIDTH (64*5)
+#define SCREEN_HEIGHT (32*5)
 
 int main(int argc, char **argv)
 { 
@@ -45,10 +45,33 @@ int main(int argc, char **argv)
       //Update the surface
       SDL_UpdateWindowSurface( window );
 
-      //Wait two seconds
-      for(int i = 0; i < 2000; i++){
-        SDL_PumpEvents();
-        SDL_Delay(1);
+      bool quit = false;
+      SDL_Event e;
+      SDL_Renderer* gRenderer = SDL_GetRenderer(window);
+      if(!gRenderer) {
+        printf( "Renderer could not be created! SDL Error: %s\n", SDL_GetError() );
+        return 1;
+      }
+
+      while(!quit) {
+        while(SDL_PollEvent( &e ) != 0) {
+          if( e.type == SDL_QUIT ) {
+            quit = true;
+          }
+        }
+
+        SDL_SetRenderDrawColor( gRenderer, 0xFF, 0xFF, 0xFF, 0xFF );
+        SDL_RenderClear( gRenderer );
+
+        for(int y = 0; y < 32; ++y) {
+          for(int x = 0; x < 64; ++x) {
+            SDL_Rect fillRect = { x*5, y*5, 5, 5 };
+            SDL_SetRenderDrawColor( gRenderer, (x+y)%2==0?0xFF:0x0, (x+y)%2==0?0xFF:0x0, (x+y)%2==0?0xFF:0x0, 0xFF );        
+            SDL_RenderFillRect( gRenderer, &fillRect );
+          }
+        }
+
+        SDL_RenderPresent( gRenderer );
       }
     }
   }
