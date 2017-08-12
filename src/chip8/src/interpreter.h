@@ -45,6 +45,7 @@ uint8_t opcode(struct c8_instruction i);
 
 void dispatch(struct c8_interpreter *interp, struct c8_instruction i);
 void run(struct c8_interpreter *interp);
+void step(struct c8_interpreter *interp);
 
 void cls(struct c8_interpreter *interp);
 void ret(struct c8_interpreter *interp);

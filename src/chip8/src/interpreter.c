@@ -117,6 +117,17 @@ void run(struct c8_interpreter *interp)
   }
 }
 
+void step(struct c8_interpreter *interp)
+{
+  uint16_t op = 0;
+  op |= ((uint16_t)(interp->cpu.memory[interp->cpu.pc])) << 8;
+  op |= (uint16_t)(interp->cpu.memory[interp->cpu.pc + 1]);
+
+  struct c8_instruction i = { .op = op };
+  dispatch(interp, i);
+  interp->cpu.pc += 2;
+}
+
 void cls(struct c8_interpreter *interp)
 {
   for(size_t i = 0; i < 64*32; ++i) {
