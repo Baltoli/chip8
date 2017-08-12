@@ -5,6 +5,7 @@
 #include <stdint.h>
 
 struct c8_cpu {
+  // FIXME: memory is 8-bit!!! need to fix this (fetch execute etc)
   uint16_t memory[4096];
   uint8_t registers[16];
   uint16_t vi;
