@@ -3,18 +3,19 @@
 #include <GLFW/glfw3.h>
 
 #include <stdio.h>
+#include <stdlib.h>
 
 void error_callback(int error, const char* description)
 {
     fprintf(stderr, "Error: %s\n", description);
 }
 
-int main(int argc, char **argv)
-{ 
+GLFWwindow *init_graphics(void)
+{
   glfwSetErrorCallback(error_callback);
 
   if(!glfwInit()) {
-    return 1;
+    return NULL;
   }
 
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -23,12 +24,20 @@ int main(int argc, char **argv)
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
   GLFWwindow* window = glfwCreateWindow(640, 480, "My Title", NULL, NULL);
-  if(!window) {
-    return 2;
-  }
-  glfwMakeContextCurrent(window);
 
-  while(true){glfwPollEvents();}
+  glfwMakeContextCurrent(window);
+  glfwSwapInterval(1);
+
+  return window;
+}
+
+int main(int argc, char **argv)
+{ 
+  GLFWwindow *wind = init_graphics();
+  if(!wind) {
+    glfwTerminate();
+    return 1;
+  }
 
   struct c8_interpreter *in = new_interpreter();
   in->cpu.memory[0x200] = 0x6081;
@@ -37,6 +46,12 @@ int main(int argc, char **argv)
   run(in);
   dump_state(in);
 
+  while (!glfwWindowShouldClose(wind)) {
+    glfwSwapBuffers(wind);
+    glfwPollEvents();
+  }
+
+  glfwDestroyWindow(wind);
   glfwTerminate();
   return 0;
 }
