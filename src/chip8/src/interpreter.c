@@ -95,7 +95,7 @@ void dispatch(struct c8_interpreter *interp, struct c8_instruction i)
 
   else {
 fail:
-    printf("Unhandled instruction at 0x%03X: 0x%03X\n", interp->cpu.pc, i.op);
+    printf("Unhandled instruction at 0x%03X: 0x%04X\n", interp->cpu.pc, i.op);
     interp->running = false;
   }
 }

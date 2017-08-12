@@ -15,10 +15,6 @@ int main(int argc, char **argv)
   in->cpu.memory[0x200] = 0x12;
   in->cpu.memory[0x201] = 0x00;
 
-  in->display.buffer[0*64 + 0] = 1;
-  in->display.buffer[1*64 + 1] = 1;
-  in->display.buffer[2*64 + 2] = 1;
-
   in->running = true;
 
   SDL_Window* window = NULL;
@@ -46,6 +42,8 @@ int main(int argc, char **argv)
         return 1;
       }
 
+      uint32_t last_draw = SDL_GetTicks();
+
       while(!quit && in->running) {
         step(in);
 
@@ -55,14 +53,17 @@ int main(int argc, char **argv)
           }
         }
 
-        for(int y = 0; y < 32; ++y) {
-          for(int x = 0; x < 64; ++x) {
-            int colour = in->display.buffer[y*64 + x] ? 0xFF : 0x00;
+        if(SDL_GetTicks() - last_draw >= 16) {
+          for(int y = 0; y < 32; ++y) {
+            for(int x = 0; x < 64; ++x) {
+              int colour = in->display.buffer[y*64 + x] ? 0xFF : 0x00;
 
-            SDL_Rect fillRect = { x*5, y*5, 5, 5 };
-            SDL_SetRenderDrawColor( gRenderer, colour, colour, colour, 0xFF );
-            SDL_RenderFillRect( gRenderer, &fillRect );
+              SDL_Rect fillRect = { x*5, y*5, 5, 5 };
+              SDL_SetRenderDrawColor( gRenderer, colour, colour, colour, 0xFF );
+              SDL_RenderFillRect( gRenderer, &fillRect );
+            }
           }
+          last_draw = SDL_GetTicks();
         }
 
         SDL_RenderPresent( gRenderer );
