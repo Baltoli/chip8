@@ -5,8 +5,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define SCREEN_WIDTH (64*5)
-#define SCREEN_HEIGHT (32*5)
+#define SCREEN_SCALE 5
+#define SCREEN_WIDTH 64
+#define SCREEN_HEIGHT 32
 
 static SDL_Window *window;
 
@@ -20,8 +21,8 @@ void init_graphics(void)
       "Chip8", 
       SDL_WINDOWPOS_UNDEFINED, 
       SDL_WINDOWPOS_UNDEFINED, 
-      SCREEN_WIDTH, 
-      SCREEN_HEIGHT, 
+      SCREEN_WIDTH * SCREEN_SCALE,
+      SCREEN_HEIGHT * SCREEN_SCALE, 
       SDL_WINDOW_SHOWN
     );
 
@@ -39,6 +40,7 @@ void emulator_loop(struct c8_interpreter *in)
   SDL_Renderer* gRenderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
   if(!gRenderer) {
     printf( "Renderer could not be created! SDL Error: %s\n", SDL_GetError() );
+    exit(1);
   }
 
   uint32_t last_draw = SDL_GetTicks();
@@ -53,11 +55,11 @@ void emulator_loop(struct c8_interpreter *in)
     }
 
     if(SDL_GetTicks() - last_draw >= 16) {
-      for(int y = 0; y < 32; ++y) {
-        for(int x = 0; x < 64; ++x) {
-          int colour = in->display.buffer[y*64 + x] ? 0xFF : 0x00;
+      for(int y = 0; y < SCREEN_HEIGHT; ++y) {
+        for(int x = 0; x < SCREEN_WIDTH; ++x) {
+          int colour = in->display.buffer[y*SCREEN_WIDTH + x] ? 0xFF : 0x00;
 
-          SDL_Rect fillRect = { x*5, y*5, 5, 5 };
+          SDL_Rect fillRect = { x*SCREEN_SCALE, y*SCREEN_SCALE, SCREEN_SCALE, SCREEN_SCALE };
           SDL_SetRenderDrawColor( gRenderer, colour, colour, colour, 0xFF );
           SDL_RenderFillRect( gRenderer, &fillRect );
         }
