@@ -95,7 +95,7 @@ void dispatch(struct c8_interpreter *interp, struct c8_instruction i)
 
   else {
 fail:
-    printf("Unhandled instruction at 0x%04X: 0x%04X\n", interp->cpu.pc, i.op);
+    printf("Unhandled instruction at 0x%03X: 0x%03X\n", interp->cpu.pc, i.op);
     interp->running = false;
   }
 }
@@ -127,7 +127,7 @@ void cls(struct c8_interpreter *interp)
 void ret(struct c8_interpreter *interp)
 {
   if(interp->cpu.sp == 0x0) {
-    printf("Stack underflow at 0x%04X\n", interp->cpu.pc);
+    printf("Stack underflow at 0x%03X\n", interp->cpu.pc);
     interp->running = false;
     return;
   }
@@ -144,7 +144,7 @@ void jump(struct c8_interpreter *interp, uint16_t addr)
 void call(struct c8_interpreter *interp, uint16_t addr)
 {
   if(interp->cpu.sp == 0xF) {
-    printf("Stack overflow at 0x%04X\n", interp->cpu.pc);
+    printf("Stack overflow at 0x%03X\n", interp->cpu.pc);
     interp->running = false;
     return;
   }
@@ -257,8 +257,8 @@ void dump_state(struct c8_interpreter *interp)
     printf("V%1X: 0x%02X\t", i, interp->cpu.registers[i]);
     if(i % 4 == 3) { printf("\n"); }
   }
-  printf("\t\tVI: 0x%04X\n", interp->cpu.vi);
-  printf("\t\tPC: 0x%04X\n", interp->cpu.pc);
+  printf("\t\tVI: 0x%03X\n", interp->cpu.vi);
+  printf("\t\tPC: 0x%03X\n", interp->cpu.pc);
   printf("\t\tSP: %d\n", interp->cpu.sp);
 
   printf("\tMemory:\n+\t");
