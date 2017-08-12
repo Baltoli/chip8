@@ -105,9 +105,13 @@ void run(struct c8_interpreter *interp)
   interp->running = true;
 
   while(interp->running) {
-    struct c8_instruction i = { .op = interp->cpu.memory[interp->cpu.pc] };
+    uint16_t op = 0;
+    op |= ((uint16_t)(interp->cpu.memory[interp->cpu.pc])) << 8;
+    op |= (uint16_t)(interp->cpu.memory[interp->cpu.pc + 1]);
+
+    struct c8_instruction i = { .op = op };
     dispatch(interp, i);
-    interp->cpu.pc++;
+    interp->cpu.pc += 2;
   }
 }
 
@@ -132,7 +136,7 @@ void ret(struct c8_interpreter *interp)
 
 void jump(struct c8_interpreter *interp, uint16_t addr)
 {
-  interp->cpu.pc = addr - 1;
+  interp->cpu.pc = addr - 2;
 }
 
 void call(struct c8_interpreter *interp, uint16_t addr)
@@ -145,34 +149,34 @@ void call(struct c8_interpreter *interp, uint16_t addr)
 
   interp->cpu.sp++;
   interp->cpu.stack[interp->cpu.sp] = interp->cpu.pc;
-  interp->cpu.pc = addr - 1;
+  interp->cpu.pc = addr - 2;
 }
 
 void se_direct(struct c8_interpreter *interp, uint8_t reg, uint8_t byte)
 {
   if(interp->cpu.registers[reg] == byte) {
-    interp->cpu.pc += 1;
+    interp->cpu.pc += 2;
   }
 }
 
 void sne_direct(struct c8_interpreter *interp, uint8_t reg, uint8_t byte)
 {
   if(interp->cpu.registers[reg] != byte) {
-    interp->cpu.pc += 1;
+    interp->cpu.pc += 2;
   }
 }
 
 void sne_indirect(struct c8_interpreter *interp, uint8_t r1, uint8_t r2)
 {
   if(interp->cpu.registers[r1] != interp->cpu.registers[r2]) {
-    interp->cpu.pc += 1;
+    interp->cpu.pc += 2;
   }
 }
 
 void se_indirect(struct c8_interpreter *interp, uint8_t r1, uint8_t r2)
 {
   if(interp->cpu.registers[r1] == interp->cpu.registers[r2]) {
-    interp->cpu.pc += 1;
+    interp->cpu.pc += 2;
   }
 }
 
