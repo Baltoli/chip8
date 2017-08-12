@@ -103,11 +103,17 @@ fail:
 void run(struct c8_interpreter *interp)
 {
   interp->running = true;
+  interp->cpu.pc = (0x200 - 2);
 
   while(interp->running) {
-    struct c8_instruction i = { .op = interp->cpu.memory[interp->cpu.pc] };
+    interp->cpu.pc += 2;
+
+    uint16_t op = 0;
+    op |= ((uint16_t)(interp->cpu.memory[interp->cpu.pc])) << 8;
+    op |= (uint16_t)(interp->cpu.memory[interp->cpu.pc + 1]);
+
+    struct c8_instruction i = { .op = op };
     dispatch(interp, i);
-    interp->cpu.pc++;
   }
 }
 
@@ -132,7 +138,7 @@ void ret(struct c8_interpreter *interp)
 
 void jump(struct c8_interpreter *interp, uint16_t addr)
 {
-  interp->cpu.pc = addr - 1;
+  interp->cpu.pc = addr - 2;
 }
 
 void call(struct c8_interpreter *interp, uint16_t addr)
@@ -145,34 +151,34 @@ void call(struct c8_interpreter *interp, uint16_t addr)
 
   interp->cpu.sp++;
   interp->cpu.stack[interp->cpu.sp] = interp->cpu.pc;
-  interp->cpu.pc = addr - 1;
+  interp->cpu.pc = addr - 2;
 }
 
 void se_direct(struct c8_interpreter *interp, uint8_t reg, uint8_t byte)
 {
   if(interp->cpu.registers[reg] == byte) {
-    interp->cpu.pc += 1;
+    interp->cpu.pc += 2;
   }
 }
 
 void sne_direct(struct c8_interpreter *interp, uint8_t reg, uint8_t byte)
 {
   if(interp->cpu.registers[reg] != byte) {
-    interp->cpu.pc += 1;
+    interp->cpu.pc += 2;
   }
 }
 
 void sne_indirect(struct c8_interpreter *interp, uint8_t r1, uint8_t r2)
 {
   if(interp->cpu.registers[r1] != interp->cpu.registers[r2]) {
-    interp->cpu.pc += 1;
+    interp->cpu.pc += 2;
   }
 }
 
 void se_indirect(struct c8_interpreter *interp, uint8_t r1, uint8_t r2)
 {
   if(interp->cpu.registers[r1] == interp->cpu.registers[r2]) {
-    interp->cpu.pc += 1;
+    interp->cpu.pc += 2;
   }
 }
 
@@ -254,4 +260,16 @@ void dump_state(struct c8_interpreter *interp)
   printf("\t\tVI: 0x%04X\n", interp->cpu.vi);
   printf("\t\tPC: 0x%04X\n", interp->cpu.pc);
   printf("\t\tSP: %d\n", interp->cpu.sp);
+
+  printf("\tMemory:\n+\t");
+  for(int i = 0; i < 32; ++i) {
+    printf("%02X ", i);
+  }
+  printf("\n");
+
+  for(int i = 0; i < 4096; ++i) {
+    if(i % 32 == 0) { printf("0x%03X\t", i); }
+    printf("%02X ", interp->cpu.memory[i]);
+    if(i % 32 == 31) { printf("\n"); }
+  }
 }
