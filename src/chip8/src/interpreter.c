@@ -290,8 +290,11 @@ void alu(struct c8_interpreter *interp, uint8_t rx, uint8_t ry, uint8_t f)
   }
 }
 
-void draw(struct c8_interpreter *interp, uint8_t xp, uint8_t yp, uint8_t size)
+void draw(struct c8_interpreter *interp, uint8_t xr, uint8_t yr, uint8_t size)
 {
+  uint8_t xp = interp->cpu.registers[xr];
+  uint8_t yp = interp->cpu.registers[yr];
+
   for(int y = 0; y < size; ++y) {
     uint8_t row = interp->cpu.memory[interp->cpu.vi + y];
     for(int x = 0; x < 8; ++x) {
