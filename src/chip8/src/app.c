@@ -39,7 +39,7 @@ void emulator_loop(struct c8_interpreter *in)
 {
   bool quit = false;
   SDL_Event e;
-  SDL_Renderer* gRenderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+  SDL_Renderer* gRenderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
   if(!gRenderer) {
     printf( "Renderer could not be created! SDL Error: %s\n", SDL_GetError() );
     exit(1);
@@ -57,22 +57,24 @@ void emulator_loop(struct c8_interpreter *in)
     }
 
     if(SDL_GetTicks() - last_draw >= 16) {
+      uint8_t buf[64*32];
+      memcpy(buf, in->display.buffer, 64*32);
+
       if(in->cpu.delay > 0) { atomic_fetch_sub(&(in->cpu.delay), 1); }
       if(in->cpu.sound > 0) { atomic_fetch_sub(&(in->cpu.sound), 1); }
 
       for(int y = 0; y < SCREEN_HEIGHT; ++y) {
         for(int x = 0; x < SCREEN_WIDTH; ++x) {
-          int colour = in->display.buffer[y*SCREEN_WIDTH + x] ? 0xFF : 0x00;
+          int colour = buf[y*SCREEN_WIDTH + x] ? 0xFF : 0x00;
 
           SDL_Rect fillRect = { x*SCREEN_SCALE, y*SCREEN_SCALE, SCREEN_SCALE, SCREEN_SCALE };
           SDL_SetRenderDrawColor( gRenderer, colour, colour, colour, 0xFF );
           SDL_RenderFillRect( gRenderer, &fillRect );
         }
       }
+      SDL_RenderPresent( gRenderer );
       last_draw = SDL_GetTicks();
     }
-
-    SDL_RenderPresent( gRenderer );
   }
 }
 

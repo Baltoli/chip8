@@ -313,7 +313,7 @@ void interact(struct c8_interpreter *interp, uint8_t x, uint8_t code)
       interp->cpu.registers[x] = interp->keyboard.wait();
       break;
     case 0x15:
-      interp->cpu.delay = interp->cpu.registers[x];
+      atomic_store(&(interp->cpu.delay), interp->cpu.registers[x]);
       break;
     case 0x18:
       interp->cpu.sound = interp->cpu.registers[x];
