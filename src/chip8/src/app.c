@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/stat.h>
 
 #define SCREEN_SCALE 5
 #define SCREEN_WIDTH 64
@@ -71,13 +72,44 @@ void emulator_loop(struct c8_interpreter *in)
   }
 }
 
+uint8_t *rom_data(int argc, char **argv)
+{
+  if(argc != 2) {
+    return NULL;
+  }
+
+  FILE *file = fopen(argv[1], "r");
+  if(!file) {
+    return NULL;
+  }
+
+  struct stat st;
+  stat(argv[1], &st);
+  if(st.st_size != 4096) {
+    return NULL;
+  }
+
+  uint8_t *data = malloc(4096);
+  if(!data) {
+    return NULL;
+  }
+
+  fread(data, 1, 4096, file);
+  return data;
+}
+
 int main(int argc, char **argv)
 { 
+  uint8_t *rom = rom_data(argc, argv);
+  if(!rom) {
+    fprintf(stderr, "Couldn't load ROM!\n");
+    return 1;
+  }
+
   init_graphics();
   struct c8_interpreter *in = new_interpreter();
 
-  in->cpu.memory[0x200] = 0x12;
-  in->cpu.memory[0x201] = 0x00;
+  memcpy(in->cpu.memory, rom, 4096);
 
   in->running = true;
   
