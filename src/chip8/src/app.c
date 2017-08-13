@@ -116,6 +116,7 @@ int main(int argc, char **argv)
   struct c8_interpreter *in = new_interpreter();
 
   memcpy(in->cpu.memory, rom, 4096);
+  load_data(in);
 
   in->running = true;
   

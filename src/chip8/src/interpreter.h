@@ -37,6 +37,7 @@ struct c8_instruction {
 };
 
 struct c8_interpreter *new_interpreter();
+void load_data(struct c8_interpreter *interp);
 
 uint8_t byte(struct c8_instruction i);
 uint8_t nibble(struct c8_instruction i);
