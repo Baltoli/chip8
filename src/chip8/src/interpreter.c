@@ -39,6 +39,8 @@ struct c8_interpreter *new_interpreter()
 {
   struct c8_interpreter *i = malloc(sizeof(*i));
   bzero(i, sizeof(*i));
+  atomic_init(&(i->cpu.delay), 0);
+  atomic_init(&(i->cpu.sound), 0);
 
   i->cpu.pc = 0x200;
 
@@ -107,6 +109,20 @@ void dispatch(struct c8_interpreter *interp, struct c8_instruction i)
 
   else if(opcode(i) == 0xD) {
     draw(interp, x(i), y(i), nibble(i));
+  }
+
+  else if(opcode(i) == 0xE) {
+    if(byte(i) == 0x9E) {
+      if(interp->keyboard.pressed(x(i))) { interp->cpu.pc += 2; }
+    } else if(byte(i) == 0xA1) {
+      if(!interp->keyboard.pressed(x(i))) { interp->cpu.pc += 2; }
+    } else {
+      goto fail;
+    }
+  }
+
+  else if(opcode(i) == 0xF) {
+    interact(interp, x(i), byte(i));
   }
 
   else {
@@ -284,7 +300,50 @@ void draw(struct c8_interpreter *interp, uint8_t xp, uint8_t yp, uint8_t size)
   }
 }
 
-void dump_state(struct c8_interpreter *interp)
+void interact(struct c8_interpreter *interp, uint8_t x, uint8_t code)
+{
+  switch(code) {
+    case 0x07:
+      interp->cpu.registers[x] = interp->cpu.delay;
+      break;
+    case 0x0A:
+      interp->cpu.registers[x] = interp->keyboard.wait();
+      break;
+    case 0x15:
+      interp->cpu.delay = interp->cpu.registers[x];
+      break;
+    case 0x18:
+      interp->cpu.sound = interp->cpu.registers[x];
+      break;
+    case 0x1E:
+      interp->cpu.vi += interp->cpu.registers[x];
+      break;
+    case 0x29:
+      // TODO: interpreter sprite data
+      break;
+    case 0x33:
+      interp->cpu.memory[interp->cpu.vi] = interp->cpu.registers[x] / 100;
+      interp->cpu.memory[interp->cpu.vi+1] = (interp->cpu.registers[x] / 10) % 10;
+      interp->cpu.memory[interp->cpu.vi+2] = interp->cpu.registers[x] % 10;
+      break;
+    case 0x55:
+      for(int i = 0; i < x; ++i) {
+        interp->cpu.memory[interp->cpu.vi+i] = interp->cpu.registers[i];
+      }
+      break;
+    case 0x65:
+      for(int i = 0; i < x; ++i) {
+        interp->cpu.registers[i] = interp->cpu.memory[interp->cpu.vi+i];
+      }
+      break;
+    default:
+      printf("Unregonised F-series operation: 0x%02X\n", code);
+      interp->running = false;
+      break;
+  }
+}
+
+void dump_state(struct c8_interpreter *interp, bool mem)
 {
   printf("Interpreter state:\n");
   printf("\tRunning: %s\n", interp->running ? "yes" : "no");
@@ -294,19 +353,21 @@ void dump_state(struct c8_interpreter *interp)
     printf("V%1X: 0x%02X\t", i, interp->cpu.registers[i]);
     if(i % 4 == 3) { printf("\n"); }
   }
-  printf("\t\tVI: 0x%03X\n", interp->cpu.vi);
-  printf("\t\tPC: 0x%03X\n", interp->cpu.pc);
+  printf("\t\tVI: 0x%03X\tDelay: 0x%02X\n", interp->cpu.vi, interp->cpu.delay);
+  printf("\t\tPC: 0x%03X\tSound: 0x%02X\n", interp->cpu.pc, interp->cpu.sound);
   printf("\t\tSP: %d\n", interp->cpu.sp);
 
-  printf("\tMemory:\n+\t");
-  for(int i = 0; i < 32; ++i) {
-    printf("%02X ", i);
-  }
-  printf("\n");
+  if(mem) {
+    printf("\tMemory:\n+\t");
+    for(int i = 0; i < 32; ++i) {
+      printf("%02X ", i);
+    }
+    printf("\n");
 
-  for(int i = 0; i < 4096; ++i) {
-    if(i % 32 == 0) { printf("0x%03X\t", i); }
-    printf("%02X ", interp->cpu.memory[i]);
-    if(i % 32 == 31) { printf("\n"); }
+    for(int i = 0; i < 4096; ++i) {
+      if(i % 32 == 0) { printf("0x%03X\t", i); }
+      printf("%02X ", interp->cpu.memory[i]);
+      if(i % 32 == 31) { printf("\n"); }
+    }
   }
 }

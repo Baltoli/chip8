@@ -2,6 +2,7 @@
 
 #include <SDL2/SDL.h>
 
+#include <stdatomic.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
@@ -56,6 +57,9 @@ void emulator_loop(struct c8_interpreter *in)
     }
 
     if(SDL_GetTicks() - last_draw >= 16) {
+      if(in->cpu.delay > 0) { atomic_fetch_sub(&(in->cpu.delay), 1); }
+      if(in->cpu.sound > 0) { atomic_fetch_sub(&(in->cpu.sound), 1); }
+
       for(int y = 0; y < SCREEN_HEIGHT; ++y) {
         for(int x = 0; x < SCREEN_WIDTH; ++x) {
           int colour = in->display.buffer[y*SCREEN_WIDTH + x] ? 0xFF : 0x00;
@@ -114,7 +118,7 @@ int main(int argc, char **argv)
   in->running = true;
   
   emulator_loop(in);
-  dump_state(in);
+  dump_state(in, false);
 
   SDL_DestroyWindow( window );
   SDL_Quit();

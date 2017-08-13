@@ -1,6 +1,7 @@
 #ifndef INTERPRETER_H
 #define INTERPRETER_H
 
+#include <stdatomic.h>
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -8,8 +9,8 @@ struct c8_cpu {
   uint8_t memory[4096];
   uint8_t registers[16];
   uint16_t vi;
-  uint8_t delay;
-  uint8_t sound;
+  _Atomic(uint8_t) delay;
+  _Atomic(uint8_t) sound;
   uint16_t pc;
   uint8_t sp;
   uint16_t stack[16];
@@ -20,7 +21,8 @@ struct c8_display {
 };
 
 struct c8_keyboard {
-  bool keys[16];
+  uint8_t (*wait)(void);
+  bool (*pressed)(uint8_t);
 };
 
 struct c8_interpreter {
@@ -59,7 +61,8 @@ void load(struct c8_interpreter *interp, uint8_t reg, uint8_t byte);
 void add(struct c8_interpreter *interp, uint8_t reg, uint8_t byte);
 void alu(struct c8_interpreter *interp, uint8_t rx, uint8_t ry, uint8_t f);
 void draw(struct c8_interpreter *interp, uint8_t x, uint8_t y, uint8_t size);
+void interact(struct c8_interpreter *interp, uint8_t x, uint8_t code);
 
-void dump_state(struct c8_interpreter *interp);
+void dump_state(struct c8_interpreter *interp, bool mem);
 
 #endif
