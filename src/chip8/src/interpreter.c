@@ -298,7 +298,9 @@ void draw(struct c8_interpreter *interp, uint8_t xr, uint8_t yr, uint8_t size)
   for(int y = 0; y < size; ++y) {
     uint8_t row = interp->cpu.memory[interp->cpu.vi + y];
     for(int x = 0; x < 8; ++x) {
-      interp->display.buffer[(yp+y)*64 + (xp+x)] ^= (row & (1 << (7 - x))) >> (7 - x);
+      uint8_t x_actual = (xp+x) % 64;
+      uint8_t y_actual = (yp+y) % 32;
+      interp->display.buffer[y_actual*64 + x_actual] ^= (row & (1 << (7 - x))) >> (7 - x);
     }
   }
 }
