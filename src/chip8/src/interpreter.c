@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <strings.h>
+#include <time.h>
 
 static uint8_t digits[16*5] = {
   0xF0, 0x90, 0x90, 0x90, 0xF0,
@@ -56,6 +57,8 @@ inline uint8_t opcode(struct c8_instruction i)
 
 struct c8_interpreter *new_interpreter()
 {
+  srand(time(NULL));
+
   struct c8_interpreter *i = malloc(sizeof(*i));
   bzero(i, sizeof(*i));
   atomic_init(&(i->cpu.delay), 0);
@@ -124,11 +127,11 @@ void dispatch(struct c8_interpreter *interp, struct c8_instruction i)
   }
 
   else if(opcode(i) == 0xB) {
-    // TODO: relative jump
+    jump(interp, addr(i) + interp->cpu.registers[0]);
   }
 
   else if(opcode(i) == 0xC) {
-    // TODO: random byte
+    interp->cpu.registers[x(i)] = (rand() % 255) & byte(i);
   }
 
   else if(opcode(i) == 0xD) {
