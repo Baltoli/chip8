@@ -114,6 +114,7 @@ int main(int argc, char **argv)
   in->running = true;
   
   emulator_loop(in);
+  dump_state(in);
 
   SDL_DestroyWindow( window );
   SDL_Quit();

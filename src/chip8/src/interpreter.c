@@ -93,6 +93,22 @@ void dispatch(struct c8_interpreter *interp, struct c8_instruction i)
     sne_indirect(interp, x(i), y(i));
   }
 
+  else if(opcode(i) == 0xA) {
+    interp->cpu.vi = addr(i);
+  }
+
+  else if(opcode(i) == 0xB) {
+    // TODO: relative jump
+  }
+
+  else if(opcode(i) == 0xC) {
+    // TODO: random byte
+  }
+
+  else if(opcode(i) == 0xD) {
+    draw(interp, x(i), y(i), nibble(i));
+  }
+
   else {
 fail:
     printf("Unhandled instruction at 0x%03X: 0x%04X\n", interp->cpu.pc, i.op);
@@ -255,6 +271,16 @@ void alu(struct c8_interpreter *interp, uint8_t rx, uint8_t ry, uint8_t f)
       printf("Unrecognised ALU operation: 0x%1X\n", f);
       interp->running = false;
       break;
+  }
+}
+
+void draw(struct c8_interpreter *interp, uint8_t xp, uint8_t yp, uint8_t size)
+{
+  for(int y = 0; y < size; ++y) {
+    uint8_t row = interp->cpu.memory[interp->cpu.vi + y];
+    for(int x = 0; x < 8; ++x) {
+      interp->display.buffer[(yp+y)*64 + (xp+x)] ^= (row & (1 << (7 - x))) >> (7 - x);
+    }
   }
 }
 
