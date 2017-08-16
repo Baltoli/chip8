@@ -364,7 +364,7 @@ void interact(struct c8_interpreter *interp, uint8_t x, uint8_t code)
       }
       break;
     case 0x65:
-      for(int i = 0; i < x; ++i) {
+      for(int i = 0; i <= x; ++i) {
         interp->cpu.registers[i] = interp->cpu.memory[interp->cpu.vi+i];
       }
       break;

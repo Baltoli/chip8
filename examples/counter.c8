@@ -1,0 +1,40 @@
+_start:
+LD V0, 00
+main_loop:
+CLS
+LD V6, V0
+LCALL draw
+LD V0, 04
+LCALL delay
+LD V0, V6
+ADD V0, 01
+LJP main_loop
+
+; Draw the 3-digit number stored in V0
+draw:
+LD V3, 01
+LD V4, 01
+LLD I, _data
+LD B, V0
+LD V2, [I]
+LD F, V0
+DRW V3, V4, 5
+ADD V3, 05
+LD F, V1
+DRW V3, V4, 5
+ADD V3, 05
+LD F, V2
+DRW V3, V4, 5
+RET
+
+; Delay for V0 60ths of a second
+delay:
+LD DT, V0
+_delay_loop:
+LD V5, DT
+SE V5, 00
+LJP _delay_loop
+RET
+
+end:
+LJP end

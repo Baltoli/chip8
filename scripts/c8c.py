@@ -1,10 +1,12 @@
+#!/usr/bin/env python3
+
 import re
 import sys
 
 def get_bytes(n, l):
     n = int(n, 16)
     bs = []
-    while n > 16:
+    while n >= 16:
         bs.append(n % 16)
         n //= 16
     bs.append(n % 16)
@@ -138,8 +140,8 @@ pairs = [
     ("ADD I, " + vx(), f(0x1, 0xE)),
     ("LD F, " + vx(), f(0x2, 0x9)),
     ("LD B, " + vx(), f(0x3, 0x3)),
-    ("LD [I], " + vx(), f(0x5, 0x5)),
-    ("LD " + vx() + ", I", f(0x6, 0x5))
+    (r"LD \[I\], " + vx(), f(0x5, 0x5)),
+    ("LD " + vx() + r", \[I\]", f(0x6, 0x5))
 ]
 
 def convert_pseudo(line, offsets):
@@ -147,6 +149,14 @@ def convert_pseudo(line, offsets):
     m = jp_r.match(line)
     if m:
         return "JP " + "%03X" % offsets[m['label']]
+    call_r = re.compile("LCALL (?P<label>.*)")
+    m = call_r.match(line)
+    if m:
+        return "CALL " + "%03X" % offsets[m['label']]
+    ldi_r = re.compile("LLD I, (?P<label>.*)")
+    m = ldi_r.match(line)
+    if m:
+        return "LD I, " + "%03X" % offsets[m['label']]
     return line
 
 def instr(line):
@@ -163,8 +173,22 @@ def label(line):
         return line[:-1]
     return None
 
-def pseudo(line, locations):
-    pass
+def comment(line):
+    return line == "\n" or line[0] == ";"
+
+def make_sprite_byte(data):
+    val = 0x00
+    for (i,c) in enumerate(data):
+        on = (c == '@')
+        val |= ((1 if on else 0) << (7 - i))
+    return val
+
+def sprite(line):
+    sp_r = re.compile(r"sprite\((?P<name>.*)\) \[(?P<data>[@\.]{8})\]")
+    m = sp_r.match(line)
+    if m:
+        return (m['name'],make_sprite_byte(m['data']))
+    return None
 
 def pack(i):
     return bytes([i[0] << 4 | i[1], i[2] << 4 | i[3]])
@@ -173,10 +197,18 @@ if __name__ == "__main__":
     in_path = sys.argv[1]
     out_path = sys.argv[2]
     blocks = {}
+    sprites = {}
     current_block = None
     with open(in_path, "r") as in_file:
         for line in in_file:
-            if label(line):
+            if comment(line):
+                pass
+            elif sprite(line):
+                (name, row) = sprite(line)
+                if name not in sprites:
+                    sprites[name] = []
+                sprites[name].append(row)
+            elif label(line):
                 current_block = label(line)
                 blocks[current_block] = []
             else:
@@ -191,9 +223,15 @@ if __name__ == "__main__":
     for block in sizes:
         offsets[block] = off
         off += sizes[block]*2
+    for s in sprites:
+        offsets['@' + s] = off
+        off += len(sprites[s])
+    offsets['_data'] = off
     with open(out_path, "wb") as out_file:
         out_file.write(bytes([0x0] * 0x200))
         for b in blocks:
             for i in blocks[b]:
                 out_file.write(pack(instr(convert_pseudo(i, offsets))))
+        for s in sprites:
+            out_file.write(bytes(sprites[s]))
         out_file.write(bytes([0x0] * (4096 - out_file.tell())))
