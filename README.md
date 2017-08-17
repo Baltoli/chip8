@@ -1,6 +1,6 @@
 # Chip8 Implementation
 
-## To-Do list:
+## To-Do list:
 
 * Make noise
 * Implement keyboard methods on interpreter
