@@ -3,6 +3,6 @@ project(chip8 VERSION 0.1 LANGUAGES C)
 
 include(GNUInstallDirs)
 
-find_package(sdl2 REQUIRED)
+find_package(SDL2 REQUIRED)
 
 add_subdirectory(chip8)
